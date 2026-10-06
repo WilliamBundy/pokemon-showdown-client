@@ -3173,7 +3173,7 @@ export class OfficialAuthError extends Error {
 export const OfficialAuth = new class {
 	apiUrl = "https://play.pokemonshowdown.com/api/oauth/";
 	clientId = "faa34041f9b9f13ff0f8";
-	redirectURI = document.location.protocol + "//" + Config.routes.client;
+	redirectURI = 'https://psim.unlikelyto.win/oauth'; //document.location.protocol + "//" + Config.routes.client;
 
 	/**
 	 * Returns a new URL object with the given api endpoint.

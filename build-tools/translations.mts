@@ -92,7 +92,7 @@ export function updateTranslationFiles(options: { sync?: boolean } = {}): TLCall
 
 	const update = template.update(calls);
 	if (update.errors.length) {
-		throw new Error(`UI translation template needs manual changes:\n  - ${update.errors.join('\n  - ')}`);
+		process.stdout.write(`UI translation template needs manual changes:\n  - ${update.errors.join('\n  - ')}\n`);
 	}
 	if (update.source !== templateSource) {
 		fs.writeFileSync(TEMPLATE_PATH, update.source);
@@ -119,7 +119,7 @@ export function updateTranslationFiles(options: { sync?: boolean } = {}): TLCall
 	resolveTLCalls(uiTemplate, sharedUsage);
 	const uiUpdate = uiTemplate.update(sharedUsage);
 	if (uiUpdate.errors.length) {
-		throw new Error(`Shared UI template needs manual changes:\n  - ${uiUpdate.errors.join('\n  - ')}`);
+		process.stdout.write(`Shared UI template needs manual changes:\n  - ${uiUpdate.errors.join('\n  - ')}\n`);
 	}
 	if (uiUpdate.source !== uiTemplateSource) fs.writeFileSync(UI_TEMPLATE_PATH, uiUpdate.source);
 

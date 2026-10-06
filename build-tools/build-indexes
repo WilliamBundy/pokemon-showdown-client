@@ -1438,7 +1438,8 @@ console.log("DONE");
  * Build moves.js
  *********************************************************/
 
-process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.js`...");
+process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.js`...\n");
+process.stdout.write("Building `data/moves.js`\n");
 
 {
 	const Moves = requireNoCache('../caches/pokemon-showdown/dist/data/moves.js').Moves;
@@ -1454,6 +1455,7 @@ process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.j
 /*********************************************************
  * Build items.js
  *********************************************************/
+process.stdout.write("Building `data/items.js`\n");
 
 {
 	const Items = requireNoCache('../caches/pokemon-showdown/dist/data/items.js').Items;
@@ -1465,6 +1467,7 @@ process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.j
  * Build abilities.js
  *********************************************************/
 
+process.stdout.write("Building `data/abilities.js`\n");
 {
 	const Abilities = requireNoCache('../caches/pokemon-showdown/dist/data/abilities.js').Abilities;
 	const buf = 'exports.BattleAbilities = ' + es3stringify(Abilities) + ';';
@@ -1474,6 +1477,7 @@ process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.j
 /*********************************************************
  * Build typechart.js
  *********************************************************/
+process.stdout.write("Building `data/typechart.js`\n");
 
 {
 	const TypeChart = requireNoCache('../caches/pokemon-showdown/dist/data/typechart.js').TypeChart;
@@ -1484,6 +1488,7 @@ process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.j
 /*********************************************************
  * Build aliases.js
  *********************************************************/
+process.stdout.write("Building `data/aliases.js`\n");
 
 {
 	const Aliases = requireNoCache('../caches/pokemon-showdown/dist/data/aliases.js').Aliases;
@@ -1494,6 +1499,7 @@ process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.j
 /*********************************************************
  * Build formats-data.js
  *********************************************************/
+process.stdout.write("Building `data/formats-data.js`\n");
 
 {
 	const FormatsData = requireNoCache('../caches/pokemon-showdown/dist/data/formats-data.js').FormatsData;
@@ -1504,6 +1510,7 @@ process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.j
 /*********************************************************
  * Build formats.js
  *********************************************************/
+process.stdout.write("Building `config/formats.js`\n");
 
 {
 	const Formats = requireNoCache('../caches/pokemon-showdown/dist/config/formats.js').Formats;
@@ -1515,6 +1522,7 @@ process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.j
  * Build learnsets.js
  *********************************************************/
 
+process.stdout.write("Building `data/learnsets.js`\n");
 {
 	const Learnsets = requireNoCache('../caches/pokemon-showdown/dist/data/learnsets.js').Learnsets;
 	const buf = 'exports.BattleLearnsets = ' + es3stringify(Learnsets) + ';';
@@ -1526,6 +1534,7 @@ process.stdout.write("Building `data/moves,items,abilities,typechart,learnsets.j
  * Build text/*.js
  *********************************************************/
 
+process.stdout.write("Building `text/*.js` (translations)\n");
 {
 	require('./build-translations').buildTextFiles(Dex);
 }

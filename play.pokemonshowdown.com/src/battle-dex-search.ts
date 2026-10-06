@@ -713,7 +713,7 @@ abstract class BattleTypedSearch<T extends SearchType> {
 		// is available to the client here, but I guess it insists on doing this?
 		// why? why why why why why?
 		// hopefully we don't end up with any name collisions, but who knows!
-		if(format.startsWith('ptl') || format.startsWith('el') || format.startWith('xyl') || format.startsWith('cl') || format.startsWith('yl')) {
+		if(format.startsWith('ptl') || format.startsWith('el') || format.startsWith('xyl') || format.startsWith('cl') || format.startsWith('yl')) {
 			this.dex = Dex.mod(originalFormat.slice(0, 4) + 'legacy')
 			this.formatType = 'legacy';
 

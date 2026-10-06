@@ -67,6 +67,7 @@ export class Format implements FormatData {
 	isNatDex: boolean;
 	isBDSP: boolean;
 	isChampions: boolean;
+	isLegacy: boolean;
 	allowMultipleMegas: boolean;
 	formeLegality: 'normal' | 'hackmons' | 'custom' = 'normal';
 	abilityLegality: 'normal' | 'hackmons' = 'normal';
@@ -80,12 +81,21 @@ export class Format implements FormatData {
 		this.isLetsGo = id.includes('letsgo');
 		this.isNatDex = id.includes('nationaldex') || id.includes('natdex');
 		this.isBDSP = id.includes('bdsp');
+		// TODO(will) more awful hacks :)
+		this.isLegacy = 
+			id.startsWith('gen1yl') || 
+			id.startsWith('gen2cl') ||
+			id.startsWith('gen3el') ||
+			id.startsWith('gen4ptl') ||
+			id.startsWith('gen6xyl');
+
 		this.isChampions = id.includes('champions');
 		this.allowMultipleMegas = id.includes('mega');
 		this.mod = `gen${this.gen}` as ID;
 		if (this.gen === 7 && this.isLetsGo) this.mod = 'gen7letsgo' as ID;
 		if (this.gen === 8 && this.isBDSP) this.mod = 'gen8bdsp' as ID;
 		if (this.gen === 9 && this.isChampions) this.mod = 'champions' as ID;
+		if (this.isLegacy) this.mod += 'legacy';
 		if (id.includes('almostanyability') || id.includes('aaa')) this.abilityLegality = 'hackmons';
 		if (id.includes('hackmons') || id.includes('bh')) {
 			this.formeLegality = 'hackmons';

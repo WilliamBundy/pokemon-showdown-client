@@ -674,7 +674,7 @@ abstract class BattleTypedSearch<T extends SearchType> {
 
 	protected formatType: 'doubles' | 'bdsp' | 'bdspdoubles' | 'rs' | 'frlg' | 'bw1' | 'letsgo' | 'metronome' | 'natdex' |
 		'nfe' | 'ssdlc1' | 'ssdlc1doubles' | 'predlc' | 'predlcdoubles' | 'svdlc1' | 'svdlc1doubles' | 'stadium' | 'lc' |
-		'champions' | 'natdexchampions' | null = null;
+		'champions' | 'natdexchampions' | 'legacy' | 'legacydoubles' | null = null;
 	isDoubles = false;
 
 	/**
@@ -698,12 +698,30 @@ abstract class BattleTypedSearch<T extends SearchType> {
 		this.baseResults = null;
 		this.baseIllegalResults = null;
 
+		let originalFormat = format;
+
 		if (format.startsWith('gen')) {
 			const gen = (Number(format.charAt(3)) || 6);
 			format = (format.slice(4) || 'customgame') as ID;
 			this.dex = Dex.forGen(gen);
 		} else if (!format) {
 			this.dex = Dex;
+		}
+
+		// NOTE(will) fix for legacy mods
+		// FIXME: I hate this, I think all the format/mod information 
+		// is available to the client here, but I guess it insists on doing this?
+		// why? why why why why why?
+		// hopefully we don't end up with any name collisions, but who knows!
+		if(format.startsWith('ptl') || format.startsWith('el') || format.startWith('xyl') || format.startsWith('cl') || format.startsWith('yl')) {
+			this.dex = Dex.mod(originalFormat.slice(0, 4) + 'legacy')
+			this.formatType = 'legacy';
+
+			// hack for older gens, may be uneccessary
+			if (format.includes('doubles')) {
+				this.formatType = 'legacydoubles';
+				this.isDoubles = true;
+			}
 		}
 
 		if (format.startsWith('dlc1') && this.dex.gen === 8) {
@@ -912,6 +930,12 @@ abstract class BattleTypedSearch<T extends SearchType> {
 		if (this.formatType === 'frlg') table = table['gen3frlg'];
 		if (this.formatType === 'champions') table = table['champions'];
 		if (this.formatType === 'natdexchampions') table = table['natdexchampions'];
+		//FIXME(will): it's another one
+		if(this.formatType == 'legacy') {
+			if(this.dex.gen == 4) {
+				table = table['gen4legacy'];
+			}
+		}
 		if (speciesid in table.learnsets) return speciesid;
 		const species = this.dex.species.get(speciesid);
 		if (!species.exists) return '' as ID;
@@ -1185,6 +1209,11 @@ class BattlePokemonSearch extends BattleTypedSearch<'pokemon'> {
 			}
 		} else if (this.formatType === 'stadium') {
 			table = table[`gen${dex.gen}stadium${dex.gen > 1 ? dex.gen : ''}`];
+		} else if (this.formatType?.startsWith('legacy')) {
+			//FIXME(will): would there even be a point in trying to fix this?
+			if(this.dex.gen == '4') {
+				table = table['gen4legacy'];
+			}
 		}
 
 		if (!table.tierSet) {
@@ -1505,6 +1534,9 @@ class BattleItemSearch extends BattleTypedSearch<'item'> {
 			table = table[`champions`];
 		} else if (this.formatType === 'natdexchampions') {
 			table = table[`natdexchampions`];
+		//FIXME(will): horrible hacks because that's the showdown way apparently
+		} else if(this.formatType?.startsWith('ptl')) {
+			table = table['gen4legacy'];
 		} else if (this.dex.gen < 9) {
 			table = table[`gen${this.dex.gen}`];
 		}
@@ -1897,6 +1929,14 @@ class BattleMoveSearch extends BattleTypedSearch<'move'> {
 		if (this.formatType?.startsWith('ssdlc1')) lsetTable = lsetTable['gen8dlc1'];
 		if (this.formatType?.startsWith('predlc')) lsetTable = lsetTable['gen9predlc'];
 		if (this.formatType?.startsWith('svdlc1')) lsetTable = lsetTable['gen9dlc1'];
+		//FIXME(will) why? why this? why can't we have a global function that transforms
+		// a format into a modid based on, idk, the information provided in formats.ts?????
+		// why is it like this everywhere???
+		if (this.formatType?.includes('legacy')) {
+			if(gen === '4') {
+				lsetTable = lsetTable['gen4legacy'];
+			} 
+		}
 		while (learnsetid) {
 			let learnset = lsetTable.learnsets[learnsetid];
 			if (learnset) {

@@ -34,10 +34,14 @@ try {
 var options = {cwd: __dirname, stdio: 'inherit'};
 var full = '';
 
+var newargv = []
+if(process.argv.includes('--no-update')) newargv.push('--no-update')
+if(process.argv.includes('--no-rebuild')) newargv.push('--no-rebuild')
+
 switch (process.argv[2] || '') {
 case 'full':
 	execFileSync(process.execPath, ['./build-tools/build-indexes'].concat(
-		process.argv.includes('--no-update') ? ['--no-update'] : []
+			newargv
 	), options);
 	execSync(`node ./build-tools/build-learnsets`, options);
 	execSync(`node ./build-tools/build-minidex`, options);

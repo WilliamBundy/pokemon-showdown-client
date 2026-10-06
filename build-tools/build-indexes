@@ -9,22 +9,27 @@ process.chdir(__dirname + '/..');
 fs.mkdirSync('play.pokemonshowdown.com/data', { recursive: true });
 
 const noUpdate = process.argv.includes('--no-update');
-if (!fs.existsSync('caches/pokemon-showdown')) {
-	if (noUpdate) {
-		console.error('Missing caches/pokemon-showdown. Check out the server before using --no-update.');
-		process.exit(1);
-	}
-	child_process.execSync('git clone https://github.com/smogon/pokemon-showdown.git', {
-		cwd: 'caches',
-	});
-}
+const noRebuild = process.argv.includes('--no-rebuild');
+if(!noRebuild) {
+		if (!fs.existsSync('caches/pokemon-showdown')) {
+			if (noUpdate) {
+				console.error('Missing caches/pokemon-showdown. Check out the server before using --no-update.');
+				process.exit(1);
+			}
+			child_process.execSync('git clone https://github.com/WilliamBundy/pokemon-showdown.git', {
+				cwd: 'caches',
+			});
+		}
 
-process.stdout.write(
-	noUpdate ? "Building data from existing server checkout... " : "Syncing data from Git repository... "
-);
-if (!noUpdate) child_process.execSync('git pull', { cwd: 'caches/pokemon-showdown' });
-child_process.execSync('npm run build', { cwd: 'caches/pokemon-showdown' });
-console.log("DONE");
+		process.stdout.write(
+			noUpdate ? "Building data from existing server checkout... " : "Syncing data from Git repository... "
+		);
+		if (!noUpdate) child_process.execSync('git pull', { cwd: 'caches/pokemon-showdown' });
+		if (!noRebuild) child_process.execSync('npm run build', { cwd: 'caches/pokemon-showdown' });
+		console.log("DONE");
+} else {
+		console.log('SKIPPING');
+}
 
 const Dex = require('../caches/pokemon-showdown/dist/sim/dex').Dex;
 const CompoundWordNames = require('../caches/pokemon-showdown/dist/data/aliases').CompoundWordNames;
@@ -275,6 +280,7 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 		8.6, 8.4, 8.2, -8.4, -8.6,
 		7.1,
 		5.1,
+		4.001, -4.001, //gen4legacy, gen4legacydoubles
 		3.1, 3.11,
 	];
 
@@ -300,6 +306,7 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 		const isBW1 = genIdent === 5.1;
 		const isRS = genIdent === 3.1;
 		const isFRLG = genIdent === 3.11;
+		const isLegacy = ('' + genIdent).endsWith('.001')
 		const gen = (() => {
 			let genStr = 'gen' + genNum;
 			if (isSSDLC1) genStr += 'dlc1';
@@ -313,9 +320,10 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 			if (isRS) genStr += 'rs';
 			if (isFRLG) genStr += 'frlg';
 			if (isChampions || isNDChampions) genStr = 'champions';
+			if (isLegacy) genStr += 'legacy';
 			return genStr;
 		})();
-		// process.stdout.write("" + gen + (isDoubles ? " doubles" : "") + "... ");
+		process.stdout.write("" + gen + (isDoubles ? " doubles" : "") + "... \n");
 		const pokemon = Object.keys(Dex.data.Pokedex);
 		pokemon.sort();
 		const tierTable = {};
@@ -564,12 +572,16 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 			BattleTeambuilderTable[gen + 'vgc'].formatSlices = formatSlices;
 			if (genNum === 9) BattleTeambuilderTable[gen + 'vgc'].metagameBans = metagameBans;
 		} else if (isDoubles) {
+			if(isLegacy) console.log("adding " + gen + " in doubles");
 			BattleTeambuilderTable[gen + 'doubles'] = {};
 			BattleTeambuilderTable[gen + 'doubles'].tiers = tiers;
 			BattleTeambuilderTable[gen + 'doubles'].items = items;
 			BattleTeambuilderTable[gen + 'doubles'].overrideTier = overrideTier;
 			BattleTeambuilderTable[gen + 'doubles'].metagameBans = metagameBans;
 			BattleTeambuilderTable[gen + 'doubles'].formatSlices = formatSlices;
+			if(isLegacy) {
+				BattleTeambuilderTable[gen+'doubles'].learnsets = {};
+			}
 		} else if (isGen9BH) {
 			BattleTeambuilderTable['bh'] = {};
 			BattleTeambuilderTable['bh'].tiers = tiers;
@@ -596,6 +608,7 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 			BattleTeambuilderTable[gen].nonstandardMoves = nonstandardMoves;
 			BattleTeambuilderTable[gen].learnsets = {};
 		} else {
+			if(isLegacy) console.log("adding " + gen + " in final else");
 			BattleTeambuilderTable[gen] = {};
 			BattleTeambuilderTable[gen].overrideTier = overrideTier;
 			BattleTeambuilderTable[gen].tiers = tiers;
@@ -608,6 +621,10 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 				BattleTeambuilderTable[gen].nonstandardMoves = nonstandardMoves;
 				BattleTeambuilderTable[gen].learnsets = {};
 			}
+			if(isLegacy) {
+				BattleTeambuilderTable[gen].learnsets = {};
+			}
+
 		}
 
 		const tierOrder = (() => {
@@ -1209,6 +1226,24 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 		}
 	}
 
+	// NOTE(will): Based on Casper's code found here, big thanks
+	// https://github.com/Casper1123/pokemon-showdown-client/blob/3a31e9c38b9e200722aed94912d1cf9ff2256b1b/build-tools/build-indexes#L809
+	const G4LegacyLearnsets = Dex.mod('gen4legacy').data.Learnsets;
+	for (const tableId of ['gen4legacy', 'gen4legacydoubles']) {
+		for (const id in G4LegacyLearnsets) {
+			const species = Dex.mod('gen4legacy').species.get(id);
+			if (species.isNonstandard && ['Unobtainable', 'CAP'].includes(species.isNonstandard)) continue;
+
+			// NOTE(will): this is a bit of a hack that I can get away with because 
+			// in my mod, all the movesets are implemented as "learned at level 1 in this generation"
+			// and I'm relying on that because I don't know the syntax properly
+			BattleTeambuilderTable[tableId].learnsets[id] = {};
+			for(const moveid in G4LegacyLearnsets[id].learnset) {
+				BattleTeambuilderTable[tableId].learnsets[id][moveid] = '4';
+			}
+		}
+	}
+
 	// Client relevant data that should be overridden by past gens and mods
 	const overrideSpeciesKeys = [
 		'abilities', 'baseStats', 'cosmeticFormes', 'isNonstandard', 'requiredItems', 'types', 'unreleasedHidden',
@@ -1307,7 +1342,7 @@ process.stdout.write("Building `data/teambuilder-tables.js`... ");
 	//
 
 	for (const mod of [
-		'gen3rs', 'gen3frlg', 'gen5bw1', 'gen7letsgo', 'gen8bdsp', 'gen9ssb', 'champions',
+		'gen3rs', 'gen3frlg', 'gen5bw1', 'gen7letsgo', 'gen8bdsp', 'gen9ssb', 'champions', 'gen4legacy', 'gen4legacydoubles'
 	]) {
 		const modDex = Dex.mod(mod);
 		const modData = modDex.data;

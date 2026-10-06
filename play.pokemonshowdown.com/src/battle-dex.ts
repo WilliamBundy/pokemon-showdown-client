@@ -542,6 +542,14 @@ export const Dex = new class implements ModdedDex {
 		if (dex.gen === 9 && formatid.includes('champions')) {
 			dex = Dex.mod('champions' as ID);
 		}
+
+
+		//FIXME(will): this is a terrible hack for testing
+		if(formatid.startsWith('ptl')) {
+			dex = Dex.mod('gen4legacy');
+		}
+
+		
 		return dex;
 	}
 
